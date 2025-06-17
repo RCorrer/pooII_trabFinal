@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  pizzaria-db:
+    image: postgres:13
+    container_name: pizzaria-postgres
+    environment:
+      POSTGRES_PASSWORD: postgres # Senha temporária para root
+    ports:
+      - "5433:5432" # Usando porta 5433 para evitar conflitos
+    volumes:
+      - pizzaria_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pizzaria_data:
