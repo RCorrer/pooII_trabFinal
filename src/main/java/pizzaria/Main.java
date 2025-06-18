@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import telas.telaMenuInicial;
 
 public class Main {
     public static void main(String[] args) {
@@ -143,8 +144,9 @@ public class Main {
                         " | Status: " + p.getStatus());
             }
 
-            System.out.println("\n=== TESTE CONCLUÍDO COM SUCESSO ===");
-
+            System.out.println("\n=== TESTE CONCLUÍDO COM SUCESSO ABRINDO TELA ===");
+            telaMenuInicial telaMenu = new telaMenuInicial();
+            telaMenu.setVisible(true);
         } catch (SQLException e) {
             System.err.println("Erro de banco de dados: " + e.getMessage());
             e.printStackTrace();

@@ -63,13 +63,13 @@ public class TipoPizzaDaoSql implements TipoPizzaDao {
 
     @Override
     public void atualizar(TipoPizza tipo) throws SQLException {
-        String sql = "UPDATE tipo_pizza SET nome = ?, preco_por_cm2 = ?, categoria = ? WHERE id = ?";
+        String sql = "UPDATE tipo_pizza SET preco_por_cm2 = ?, categoria = ? WHERE id = ?";
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, tipo.getNome());
+            stmt.setLong(1, tipo.getPrecoPorCm2().longValue());
             stmt.setBigDecimal(2, tipo.getPrecoPorCm2());
-            stmt.setString(3, tipo.getCategoria().name());
-            stmt.setLong(4, tipo.getId());
+            stmt.setString(2, tipo.getCategoria().name());
+            stmt.setLong(3, tipo.getId());
             stmt.executeUpdate();
         } catch (IOException e) {
             throw new SQLException("Erro ao acessar propriedades do banco", e);

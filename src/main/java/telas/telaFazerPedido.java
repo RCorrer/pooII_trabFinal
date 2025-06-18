@@ -5,15 +5,26 @@
 package telas;
 
 import java.sql.SQLException;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 import pizzaria.controller.PedidoController;
+import pizzaria.controller.PizzaController;
 import pizzaria.controller.SaborController;
+import pizzaria.controller.TipoPizzaController;
+import pizzaria.enums.FormaPizza;
 import pizzaria.enums.StatusPedido;
+import pizzaria.model.Cliente;
 import pizzaria.model.Pedido;
 import pizzaria.model.Pizza;
 import pizzaria.model.Sabor;
+import pizzaria.model.TipoPizza;
+import pizzaria.model.formas.Circulo;
+import pizzaria.model.formas.Forma;
+import pizzaria.model.formas.Quadrado;
+import pizzaria.model.formas.TrianguloEquilatero;
+import pizzaria.util.FormaFactory;
 import pizzaria.view.TableModelPizzas;
 
 /**
@@ -30,11 +41,19 @@ public class telaFazerPedido extends javax.swing.JFrame {
     }
 
     private Pedido pedidoEscolhido;
+    private Forma forma;
+    private Cliente clienteSelecionado;
     private PedidoController pedidoController = new PedidoController();
+    private PizzaController pizzaController = new PizzaController();
+    private TipoPizzaController tipoPizzaCotroller = new TipoPizzaController();
     private SaborController saborController = new SaborController();
     private TableModelPizzas TabelaModelPizzas = new TableModelPizzas();
     private Pizza pizzaSelecionada;
     private int linhaClicadaParaRemoção;
+    //array temporario para salvar as pizzas que vao ser adicionadas no pedido
+    List<Pizza> pizzasCriadas = new ArrayList<Pizza>();
+   
+
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -60,14 +79,13 @@ public class telaFazerPedido extends javax.swing.JFrame {
         labelValorTotal = new javax.swing.JLabel();
         boxTipos1 = new javax.swing.JComboBox<>();
         boxTipos2 = new javax.swing.JComboBox<>();
-        jLabel1 = new javax.swing.JLabel();
-        boxStatus = new javax.swing.JComboBox<>();
         jScrollPane1 = new javax.swing.JScrollPane();
         tablePizzas = new javax.swing.JTable();
         btnCalcular = new javax.swing.JButton();
         btnRemover = new javax.swing.JButton();
         labelMax = new javax.swing.JLabel();
         labelMin = new javax.swing.JLabel();
+        jToggleButton1 = new javax.swing.JToggleButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -147,33 +165,6 @@ public class telaFazerPedido extends javax.swing.JFrame {
             }
         });
 
-        jLabel1.setText("STATUS:");
-
-        boxStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { }));
-        boxStatus.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                boxStatusItemStateChanged(evt);
-            }
-        });
-        boxStatus.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                boxStatusMouseClicked(evt);
-            }
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                boxStatusMousePressed(evt);
-            }
-        });
-        boxStatus.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                boxStatusActionPerformed(evt);
-            }
-        });
-        boxStatus.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-            public void propertyChange(java.beans.PropertyChangeEvent evt) {
-                boxStatusPropertyChange(evt);
-            }
-        });
-
         tablePizzas.setModel(TabelaModelPizzas);
         tablePizzas.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -200,6 +191,13 @@ public class telaFazerPedido extends javax.swing.JFrame {
 
         labelMin.setText("Min");
 
+        jToggleButton1.setText("Salvar Pedido");
+        jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jToggleButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -208,46 +206,42 @@ public class telaFazerPedido extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(boxStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel1))
-                        .addGap(15, 15, 15))
+                        .addComponent(labelMin)
+                        .addGap(79, 79, 79)
+                        .addComponent(labelMax))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(boxSabor1, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(boxSabor2, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jLabel4)
+                        .addGap(131, 131, 131)
+                        .addComponent(jLabel5))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(boxTipos1, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(boxTipos2, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(boxForma, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnDimensao)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(70, 70, 70)
+                        .addComponent(btnRemover, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(30, 30, 30)
+                        .addComponent(btnAdicionar, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnArea)
+                    .addComponent(jLabel2)
+                    .addComponent(txtAreaDimensao, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(127, 127, 127)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(labelValorTotal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnCalcular, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                             .addComponent(btnSair, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(labelMin)
-                                .addGap(79, 79, 79)
-                                .addComponent(labelMax))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel4)
-                                .addGap(131, 131, 131)
-                                .addComponent(jLabel5))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(boxTipos1, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(boxTipos2, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(boxForma, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnDimensao)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(70, 70, 70)
-                                .addComponent(btnRemover, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(30, 30, 30)
-                                .addComponent(btnAdicionar, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(btnArea)
-                            .addComponent(jLabel2)
-                            .addComponent(txtAreaDimensao, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(127, 127, 127)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(labelValorTotal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(btnCalcular, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE))))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jToggleButton1))
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                            .addComponent(boxSabor1, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(18, 18, 18)
+                            .addComponent(boxSabor2, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 545, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -257,10 +251,7 @@ public class telaFazerPedido extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(boxStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(17, 17, 17)
+                        .addGap(67, 67, 67)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(boxForma, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -294,7 +285,9 @@ public class telaFazerPedido extends javax.swing.JFrame {
                             .addComponent(btnRemover)
                             .addComponent(btnAdicionar))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
-                        .addComponent(btnSair))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnSair)
+                            .addComponent(jToggleButton1)))
                     .addComponent(jScrollPane1))
                 .addContainerGap())
         );
@@ -303,8 +296,11 @@ public class telaFazerPedido extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSairActionPerformed
-        // sair desta tela        
+        // sair desta tela  
+        telaVerClientePedidos telaVerClientePedidos1 = new telaVerClientePedidos();
+        telaVerClientePedidos1.setVisible(true);
         this.dispose();
+        
     }//GEN-LAST:event_btnSairActionPerformed
 
     private void formComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentShown
@@ -312,8 +308,7 @@ public class telaFazerPedido extends javax.swing.JFrame {
         //popular combo boxes e inicializar id do pedido e tabela dos pedidos
         String[] formas = {"Quadrada", "Circular", "Triangular"};
         String[] tiposPizzas = {"Simples", "Especial", "Premium"};
-        String[] status = {"ABERTO", "CAMINHO", "ENTREGUE"};
-        Pedido p = pedidoEscolhido;
+
         //popular formas
         for (String tipos : formas) {
             boxForma.addItem(tipos);
@@ -323,24 +318,6 @@ public class telaFazerPedido extends javax.swing.JFrame {
             boxTipos1.addItem(pizzas);
             boxTipos2.addItem(pizzas);
         }
-        // popular a box
-        StatusPedido estadoAtual = pedidoEscolhido.getStatus() ;
-        for (String estado : status) {
-            boxStatus.addItem(estado);
-        }
-
-        for (int i = 0; i < boxStatus.getItemCount(); i++) {
-            if (boxStatus.getItemAt(i).equals(estadoAtual.name())) {
-                boxStatus.setSelectedIndex(i);
-                break;
-            }
-        }
-
-        //setar a box de acordo com o estado do pedido do cliente
-       
-
-        //popular tabela de pizzas do pedido
-        this.TabelaModelPizzas.setListaPizzas(pedidoEscolhido.getPizzas());
 
 
     }//GEN-LAST:event_formComponentShown
@@ -403,193 +380,322 @@ public class telaFazerPedido extends javax.swing.JFrame {
             System.out.println("ERRO AO LISTA OS SABORES\n" + ex);
         }
         for (Sabor sabor : sabores) {
-            boxSabor1.addItem(sabor.getNome());
+            boxSabor2.addItem(sabor.getNome());
         }
     }//GEN-LAST:event_boxTipos2ActionPerformed
 
     private void btnCalcularActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCalcularActionPerformed
         //calcular o valor da pizza e criar booleano para obrigar a calcular o valor antes de adicionar
         //sera quase uma replica do botao de casdatrar mas ao inves de cadastrar, vai apenas mostrar o valor da pizza
-        
-        boolean calculado = false;
-        String formaSelecionada = boxForma.getSelectedItem() + "";
-        String tipo1 = boxTipos1.getSelectedItem() + "";
-        String tipo2 = boxTipos2.getSelectedItem() + "";
-        String forma = boxForma.getSelectedItem() + "";
-        String sValor = txtAreaDimensao.getText();
-
-        double dimensao = 0;
         try {
-            dimensao = Double.parseDouble(sValor);
-            Pedido p = this.pedidoEscolhido;
+        String formaSelecionada = boxForma.getSelectedItem() + "";
+        String sValor = txtAreaDimensao.getText();
+        double dimensao = Double.parseDouble(sValor);
+        
+        // Validate inputs first
+        if (boxSabor1.getSelectedItem() == null || boxTipos1.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(null, "Selecione pelo menos um sabor e tipo.", "Dados incompletos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-            int indexSabor1 = boxSabor1.getSelectedIndex();
-            int indexTipo1 = boxTipos1.getSelectedIndex();
-            int indexSabor2 = boxSabor2.getSelectedIndex();
-            int indexTipo2 = boxTipos2.getSelectedIndex() - 1;
-            System.out.println(indexTipo2);
-            
-            try {
-            Sabor sabor1 = saborController.buscarSaboresPorTipo(Long.valueOf(indexTipo1)).get(indexSabor1);
-            Sabor sabor2 = indexTipo2 != -1 ? saborController.buscarSaboresPorTipo(Long.valueOf(indexTipo2)).get(indexSabor2) : null;
-            } catch (SQLException ex){
-                System.out.println("ERRO AO PEGAR SABORES\n" + ex);
+        // Get selected indices safely
+        int indexSabor1 = boxSabor1.getSelectedIndex();
+        String tipo1 = boxTipos1.getSelectedItem() + "";
+        
+        // Map tipo names to IDs
+        long tipoId1 = 0;
+        switch(tipo1) {
+            case "Simples": tipoId1 = 1; break;
+            case "Especial": tipoId1 = 2; break;
+            case "Premium": tipoId1 = 3; break;
+        }
+        
+        // Get the list of sabores for the first type
+        List<Sabor> saboresTipo1;
+        try {
+            saboresTipo1 = saborController.buscarSaboresPorTipo(tipoId1);
+            if (saboresTipo1 == null || saboresTipo1.isEmpty() || indexSabor1 >= saboresTipo1.size()) {
+                JOptionPane.showMessageDialog(null, "Sabor 1 inválido ou não disponível.", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            
+            Sabor sabor1 = saboresTipo1.get(indexSabor1);
+            List<Long> listaSaboresIds = new ArrayList<>();
+            List<TipoPizza> listaTipos = new ArrayList<>();
+            
+            // Add first sabor and its type
+            listaSaboresIds.add(sabor1.getId());
+            TipoPizza tipoPizza1 = tipoPizzaCotroller.buscarTipoPizzaPorId(sabor1.getTipoPizzaId());
+            listaTipos.add(tipoPizza1);
+            
+            // Handle second sabor if selected (not "Nenhum")
+            if (!"Nenhum".equals(boxTipos2.getSelectedItem() + "") && boxSabor2.getSelectedItem() != null) {
+                int indexSabor2 = boxSabor2.getSelectedIndex();
+                String tipo2 = boxTipos2.getSelectedItem() + "";
+                
+                long tipoId2 = 0;
+                switch(tipo2) {
+                    case "Simples": tipoId2 = 1; break;
+                    case "Especial": tipoId2 = 2; break;
+                    case "Premium": tipoId2 = 3; break;
+                }
+                
+                List<Sabor> saboresTipo2 = saborController.buscarSaboresPorTipo(tipoId2);
+                if (saboresTipo2 != null && !saboresTipo2.isEmpty() && indexSabor2 < saboresTipo2.size()) {
+                    Sabor sabor2 = saboresTipo2.get(indexSabor2);
+                    listaSaboresIds.add(sabor2.getId());
+                    TipoPizza tipoPizza2 = tipoPizzaCotroller.buscarTipoPizzaPorId(sabor2.getTipoPizzaId());
+                    listaTipos.add(tipoPizza2);
+                }
+            }
+            
+            // Create temporary pizza for calculation
+            Pizza pizza = new Pizza();
+            pizza.setSaboresIds(listaSaboresIds);
+            pizza.setPedidoId(1L);
+            pizza.setId(1L);
+            pizza.setQuantidade(1);
 
-            Pizza pizza = null;
-
-            switch (forma) {
+            boolean calculated = false;
+            switch (formaSelecionada) {
                 case "Quadrada":
-                    if (btnArea.isSelected() && dimensao >= 100 && dimensao <= 1600) {
-                        pizza = indexTipo2 != -1 ? new PizzaQuadrada(dimensao, sabor1, sabor2, true) : new PizzaQuadrada(dimensao, sabor1, true);
-                    } else if (btnDimensao.isSelected() && dimensao >= 10 && dimensao <= 40) {
-                        pizza = indexTipo2 != -1 ? new PizzaQuadrada(dimensao, sabor1, sabor2) : new PizzaQuadrada(dimensao, sabor1);
-                    } else {
-                        if (btnArea.isSelected() || btnDimensao.isSelected()){
-                            JOptionPane.showMessageDialog(null, "DIGITE UM VALOR VÁLIDO.\n", "VALOR INVALIDO", JOptionPane.INFORMATION_MESSAGE);
+                    if (btnArea.isSelected()) {
+                        if (dimensao >= 100 && dimensao <= 1600) {
+                            pizza.setForma(FormaFactory.criarFormaPorArea(FormaPizza.QUADRADA, dimensao)); // true indica que é área
+                            calculated = true;
                         } else {
-                            JOptionPane.showMessageDialog(null, "SELECIONE AREA OU DIMENSAO.\n", "AREA OU DIMENSAO", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Área deve estar entre 100 e 1600 cm²", "Valor inválido", JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else if (btnDimensao.isSelected()) {
+                        if (dimensao >= 10 && dimensao <= 40) {
+                            pizza.setForma(new Quadrado(dimensao)); // false indica que é lado
+                            calculated = true;
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Lado deve estar entre 10 e 40 cm", "Valor inválido", JOptionPane.WARNING_MESSAGE);
                         }
                     }
                     break;
 
                 case "Circular":
-
-                    if (btnArea.isSelected() && dimensao >= 100 && dimensao <= 1600) {
-                        pizza = indexTipo2 != -1 ? new PizzaRedonda(dimensao, sabor1, sabor2, true) : new PizzaRedonda(dimensao, sabor1, true);
-                    } else if (btnDimensao.isSelected() && dimensao >= 7 && dimensao <= 23) {
-                        pizza = indexTipo2 != -1 ? new PizzaRedonda(dimensao, sabor1, sabor2) : new PizzaRedonda(dimensao, sabor1);
-                    } else {
-                        if (btnArea.isSelected() || btnDimensao.isSelected()){
-                            JOptionPane.showMessageDialog(null, "DIGITE UM VALOR VÁLIDO.\n", "VALOR INVALIDO", JOptionPane.INFORMATION_MESSAGE);
+                    if (btnArea.isSelected()) {
+                        if (dimensao >= 100 && dimensao <= 1600) {
+                            pizza.setForma(FormaFactory.criarFormaPorArea(FormaPizza.CIRCULAR, dimensao)); // true indica que é área
+                            calculated = true;
                         } else {
-                            JOptionPane.showMessageDialog(null, "SELECIONE AREA OU DIMENSAO.\n", "AREA OU DIMENSAO", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Área deve estar entre 100 e 1600 cm²", "Valor inválido", JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else if (btnDimensao.isSelected()) {
+                        if (dimensao >= 7 && dimensao <= 23) {
+                            pizza.setForma(new Circulo(dimensao));
+                            calculated = true;
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Raio deve estar entre 7 e 23 cm", "Valor inválido", JOptionPane.WARNING_MESSAGE);
                         }
                     }
-
                     break;
 
                 case "Triangular":
-
-                    if (btnArea.isSelected() && dimensao >= 100 && dimensao <= 1600) {
-                        pizza = indexTipo2 != -1 ? new PizzaTriangular(dimensao, sabor1, sabor2, true) : new PizzaTriangular(dimensao, sabor1, true);
-                    } else if (btnDimensao.isSelected() && dimensao >= 20 && dimensao <= 60) {
-                        pizza = indexTipo2 != -1 ? new PizzaTriangular(dimensao, sabor1, sabor2) : new PizzaTriangular(dimensao, sabor1);
-                    } else {
-                        if (btnArea.isSelected() || btnDimensao.isSelected()){
-                            JOptionPane.showMessageDialog(null, "DIGITE UM VALOR VÁLIDO.\n", "VALOR INVALIDO", JOptionPane.INFORMATION_MESSAGE);
+                    if (btnArea.isSelected()) {
+                        if (dimensao >= 100 && dimensao <= 1600) {
+                            pizza.setForma(FormaFactory.criarFormaPorArea(FormaPizza.TRIANGULAR, dimensao)); // true indica que é área
+                            calculated = true;
                         } else {
-                            JOptionPane.showMessageDialog(null, "SELECIONE AREA OU DIMENSAO.\n", "AREA OU DIMENSAO", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Área deve estar entre 100 e 1600 cm²", "Valor inválido", JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else if (btnDimensao.isSelected()) {
+                        if (dimensao >= 20 && dimensao <= 60) {
+                            pizza.setForma(new TrianguloEquilatero(dimensao));
+                            calculated = true;
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Lado deve estar entre 20 e 60 cm", "Valor inválido", JOptionPane.WARNING_MESSAGE);
                         }
                     }
-
                     break;
-
-                default:
-                    JOptionPane.showMessageDialog(null, "SELECIONE UM FORMATO.\n", "SELECIONE FORMATO", JOptionPane.INFORMATION_MESSAGE);
             }
-            double valorTotal = pizza.getValor();
-            String pizzaValorTotal = String.format("%.2f", valorTotal);
-            labelValorTotal.setText("R$: " + pizzaValorTotal);
 
-        } catch (java.lang.NumberFormatException e) {
-            JOptionPane.showMessageDialog(null, "Insira um valor válido numérico.\n", "VALOR VÁLIDO", JOptionPane.INFORMATION_MESSAGE);
+            if (calculated) {
+                pizza.calcularValor(listaTipos);
+                String pizzaValorTotal = String.format("%.2f", pizza.getValorUnitario());
+                labelValorTotal.setText("R$: " + pizzaValorTotal);
+            } else if (!btnArea.isSelected() && !btnDimensao.isSelected()) {
+                JOptionPane.showMessageDialog(null, "SELECIONE AREA OU DIMENSAO.\n", "AREA OU DIMENSAO", JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+        } catch (SQLException ex) {
+            System.out.println("ERRO AO PEGAR SABORES\n" + ex);
+            JOptionPane.showMessageDialog(null, "Erro ao acessar os sabores.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(null, "Insira um valor válido numérico.\n", "VALOR VÁLIDO", JOptionPane.INFORMATION_MESSAGE);
+    }
+
     }//GEN-LAST:event_btnCalcularActionPerformed
 
     private void btnAdicionarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAdicionarActionPerformed
         // TODO add your handling code here:
         // Inserir pizza no pedido
         //pegar todos os valores que pizza precisa
-
-        String tipo1 = boxTipos1.getSelectedItem() + "";
-        String tipo2 = boxTipos2.getSelectedItem() + "";
-        String forma = boxForma.getSelectedItem() + "";
+        
+        //PAREI AQUI AGORA TENHO QUE FAZER A PARTE DE ADICIONAR A PIZZA USANDO OS CONTROLLER, adicionar elas 
+        // em uma lista e quando fechar esta tela criar um
+        // pedido com as pizzas adicionadas dentro desta tela
+         try {
+        String formaSelecionada = boxForma.getSelectedItem() + "";
         String sValor = txtAreaDimensao.getText();
-
-        String Sabor2 = boxSabor2.getSelectedItem() + ""; // apenas para validação se tem dois sabores ou nao
-
-        //valorDimensaoArea da pizza
-        double dimensao = 0;
-        try {
-            dimensao = Double.parseDouble(sValor);
-            Cliente c = this.clienteEscolhido;
-
-            int indexSabor1 = boxSabor1.getSelectedIndex();
-            int indexTipo1 = boxTipos1.getSelectedIndex();
-            int indexSabor2 = boxSabor2.getSelectedIndex();
-            int indexTipo2 = boxTipos2.getSelectedIndex() - 1;
-
-            Sabor sabor1 = sabores.get(indexTipo1).get(indexSabor1);
-            Sabor sabor2 = indexTipo2 != -1 ? sabores.get(indexTipo2).get(indexSabor2) : null;
-
-            Pizza pizza = null;
-
-            switch (forma) {
-                case "Quadrada":
-                    if (btnArea.isSelected() && dimensao >= 100 && dimensao <= 1600) {
-                        pizza = indexTipo2 != -1 ? new PizzaQuadrada(dimensao, sabor1, sabor2, true) : new PizzaQuadrada(dimensao, sabor1, true);
-                    } else if (btnDimensao.isSelected() && dimensao >= 10 && dimensao <= 40) {
-                        pizza = indexTipo2 != -1 ? new PizzaQuadrada(dimensao, sabor1, sabor2) : new PizzaQuadrada(dimensao, sabor1);
-                    } else {
-                        if (btnArea.isSelected() || btnDimensao.isSelected()){
-                            JOptionPane.showMessageDialog(null, "DIGITE UM VALOR VÁLIDO.\n", "VALOR INVALIDO", JOptionPane.INFORMATION_MESSAGE);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "SELECIONE AREA OU DIMENSAO.\n", "AREA OU DIMENSAO", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    }
-                    break;
-
-                case "Circular":
-
-                    if (btnArea.isSelected() && dimensao >= 100 && dimensao <= 1600) {
-                        pizza = indexTipo2 != -1 ? new PizzaRedonda(dimensao, sabor1, sabor2, true) : new PizzaRedonda(dimensao, sabor1, true);
-                    } else if (btnDimensao.isSelected() && dimensao >= 7 && dimensao <= 23) {
-                        pizza = indexTipo2 != -1 ? new PizzaRedonda(dimensao, sabor1, sabor2) : new PizzaRedonda(dimensao, sabor1);
-                    } else {
-                        if (btnArea.isSelected() || btnDimensao.isSelected()){
-                            JOptionPane.showMessageDialog(null, "DIGITE UM VALOR VÁLIDO.\n", "VALOR INVALIDO", JOptionPane.INFORMATION_MESSAGE);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "SELECIONE AREA OU DIMENSAO.\n", "AREA OU DIMENSAO", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    }
-
-                    break;
-
-                case "Triangular":
-
-                    if (btnArea.isSelected() && dimensao >= 100 && dimensao <= 1600) {
-                        pizza = indexTipo2 != -1 ? new PizzaTriangular(dimensao, sabor1, sabor2, true) : new PizzaTriangular(dimensao, sabor1, true);
-                    } else if (btnDimensao.isSelected() && dimensao >= 20 && dimensao <= 60) {
-                        pizza = indexTipo2 != -1 ? new PizzaTriangular(dimensao, sabor1, sabor2) : new PizzaTriangular(dimensao, sabor1);
-                    } else {
-                        if (btnArea.isSelected() || btnDimensao.isSelected()){
-                            JOptionPane.showMessageDialog(null, "DIGITE UM VALOR VÁLIDO.\n", "VALOR INVALIDO", JOptionPane.INFORMATION_MESSAGE);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "SELECIONE AREA OU DIMENSAO.\n", "AREA OU DIMENSAO", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    }
-
-                    break;
-
-                default:
-                    JOptionPane.showMessageDialog(null, "SELECIONE UM FORMATO.\n", "SELECIONE FORMATO", JOptionPane.INFORMATION_MESSAGE);
-            }
-
-            c.Pedido.addPizza(pizza);
-            this.TabelaModelPizzas.setListaPizzas(c.Pedido.getListPizza());
-
-        } catch (java.lang.NumberFormatException e) {
-            JOptionPane.showMessageDialog(null, "Insira um valor válido numérico.\n", "VALOR VÁLIDO", JOptionPane.INFORMATION_MESSAGE);
+        double dimensao = Double.parseDouble(sValor);
+        
+        // Validar entradas
+        if (boxSabor1.getSelectedItem() == null || boxTipos1.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(null, "Selecione pelo menos um sabor e tipo.", "Dados incompletos", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+
+        // Obter índices selecionados
+        int indexSabor1 = boxSabor1.getSelectedIndex();
+        String tipo1 = boxTipos1.getSelectedItem() + "";
+        
+        // Mapear tipos para IDs
+        long tipoId1 = 0;
+        switch(tipo1) {
+            case "Simples": tipoId1 = 1; break;
+            case "Especial": tipoId1 = 2; break;
+            case "Premium": tipoId1 = 3; break;
+        }
+        
+        // Buscar sabores do primeiro tipo
+        List<Sabor> saboresTipo1 = saborController.buscarSaboresPorTipo(tipoId1);
+        if (saboresTipo1 == null || saboresTipo1.isEmpty() || indexSabor1 >= saboresTipo1.size()) {
+            JOptionPane.showMessageDialog(null, "Sabor 1 inválido ou não disponível.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        Sabor sabor1 = saboresTipo1.get(indexSabor1);
+        List<Long> listaSaboresIds = new ArrayList<>();
+        List<TipoPizza> listaTipos = new ArrayList<>();
+        
+        // Adicionar primeiro sabor e seu tipo
+        listaSaboresIds.add(sabor1.getId());
+        TipoPizza tipoPizza1 = tipoPizzaCotroller.buscarTipoPizzaPorId(sabor1.getTipoPizzaId());
+        listaTipos.add(tipoPizza1);
+        
+        // Adicionar segundo sabor se selecionado
+        if (!"Nenhum".equals(boxTipos2.getSelectedItem() + "") && boxSabor2.getSelectedItem() != null) {
+            int indexSabor2 = boxSabor2.getSelectedIndex();
+            String tipo2 = boxTipos2.getSelectedItem() + "";
+            
+            long tipoId2 = 0;
+            switch(tipo2) {
+                case "Simples": tipoId2 = 1; break;
+                case "Especial": tipoId2 = 2; break;
+                case "Premium": tipoId2 = 3; break;
+            }
+            
+            List<Sabor> saboresTipo2 = saborController.buscarSaboresPorTipo(tipoId2);
+            if (saboresTipo2 != null && !saboresTipo2.isEmpty() && indexSabor2 < saboresTipo2.size()) {
+                Sabor sabor2 = saboresTipo2.get(indexSabor2);
+                listaSaboresIds.add(sabor2.getId());
+                TipoPizza tipoPizza2 = tipoPizzaCotroller.buscarTipoPizzaPorId(sabor2.getTipoPizzaId());
+                listaTipos.add(tipoPizza2);
+            }
+        }
+
+        // Criar pizza com base na forma selecionada
+        Pizza pizza = null;
+        boolean isArea = btnArea.isSelected();
+        
+        switch (formaSelecionada) {
+            case "Quadrada":
+                if (isArea && dimensao >= 100 && dimensao <= 1600) {
+                    pizza = pizzaController.criarPizzaPorArea(FormaPizza.QUADRADA, dimensao, listaSaboresIds, 1);
+                } else if (!isArea && dimensao >= 10 && dimensao <= 40) {
+                    pizza = pizzaController.criarPizza(FormaPizza.QUADRADA, dimensao, listaSaboresIds, 1);
+                } else {
+                    showInvalidValueMessage(isArea, "Quadrada");
+                    return;
+                }
+                break;
+
+            case "Circular":
+                if (isArea && dimensao >= 100 && dimensao <= 1600) {
+                    pizza = pizzaController.criarPizzaPorArea(FormaPizza.CIRCULAR, dimensao, listaSaboresIds, 1);
+                } else if (!isArea && dimensao >= 7 && dimensao <= 23) {
+                    pizza = pizzaController.criarPizza(FormaPizza.CIRCULAR, dimensao, listaSaboresIds, 1);
+                } else {
+                    showInvalidValueMessage(isArea, "Circular");
+                    return;
+                }
+                break;
+
+            case "Triangular":
+                if (isArea && dimensao >= 100 && dimensao <= 1600) {
+                    pizza = pizzaController.criarPizzaPorArea(FormaPizza.TRIANGULAR, dimensao, listaSaboresIds, 1);
+                } else if (!isArea && dimensao >= 20 && dimensao <= 60) {
+                    pizza = pizzaController.criarPizza(FormaPizza.TRIANGULAR, dimensao, listaSaboresIds, 1);
+                } else {
+                    showInvalidValueMessage(isArea, "Triangular");
+                    return;
+                }
+                break;
+
+            default:
+                JOptionPane.showMessageDialog(null, "SELECIONE UM FORMATO VÁLIDO.\n", "FORMATO INVÁLIDO", JOptionPane.INFORMATION_MESSAGE);
+                return;
+        }
+
+        if (pizza != null) {
+            pizzasCriadas.add(pizza);
+            this.TabelaModelPizzas.setListaPizzas(pizzasCriadas);
+            JOptionPane.showMessageDialog(null, "Pizza adicionada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            
+            // Limpar campos para nova pizza
+            boxSabor1.setSelectedIndex(0);
+            boxSabor2.setSelectedIndex(0);
+            boxTipos1.setSelectedIndex(0);
+            boxTipos2.setSelectedIndex(0);
+            txtAreaDimensao.setText("");
+            labelValorTotal.setText("VALOR TOTAL");
+        }
+
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(null, "Insira um valor válido numérico.\n", "VALOR INVÁLIDO", JOptionPane.INFORMATION_MESSAGE);
+    } catch (SQLException ex) {
+        System.out.println("ERRO AO ADICIONAR PIZZA:\n" + ex);
+        JOptionPane.showMessageDialog(null, "Erro ao adicionar pizza. Tente novamente.", "Erro", JOptionPane.ERROR_MESSAGE);
+    }
+}                                            
+
+// Método auxiliar para mostrar mensagem de valor inválido
+private void showInvalidValueMessage(boolean isArea, String forma) {
+    String tipo = isArea ? "área" : "dimensão";
+    String mensagem;
+    
+    switch (forma) {
+        case "Quadrada":
+            mensagem = isArea ? "Área deve estar entre 100 e 1600 cm²" : "Lado deve estar entre 10 e 40 cm";
+            break;
+        case "Circular":
+            mensagem = isArea ? "Área deve estar entre 100 e 1600 cm²" : "Raio deve estar entre 7 e 23 cm";
+            break;
+        case "Triangular":
+            mensagem = isArea ? "Área deve estar entre 100 e 1600 cm²" : "Lado deve estar entre 20 e 60 cm";
+            break;
+        default:
+            mensagem = "Valor inválido para a forma selecionada";
+    }
+    
+    JOptionPane.showMessageDialog(null, 
+        String.format("VALOR DE %s INVÁLIDO PARA PIZZA %s.\n%s", 
+            tipo.toUpperCase(), forma.toUpperCase(), mensagem), 
+        "VALOR INVÁLIDO", 
+        JOptionPane.WARNING_MESSAGE);
+
     }//GEN-LAST:event_btnAdicionarActionPerformed
 
     private void btnRemoverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoverActionPerformed
         //remover pizza selecionada
         if (this.pizzaSelecionada != null) {
-            Pedido p = this.pedidoEscolhido;
-            p.getPizzas().remove(pizzaSelecionada);
-            this.TabelaModelPizzas.setListaPizzas(p.getPizzas());
+            pizzasCriadas.remove(pizzaSelecionada);
+            this.TabelaModelPizzas.setListaPizzas(pizzasCriadas);
         } else {
             JOptionPane.showMessageDialog(null, "SELECIONE UMA PIZZA PRIMEIRO.\n", "SELECIONE PIZZA", JOptionPane.INFORMATION_MESSAGE);
 
@@ -605,48 +711,6 @@ public class telaFazerPedido extends javax.swing.JFrame {
         this.pizzaSelecionada = p;
 
     }//GEN-LAST:event_tablePizzasMouseClicked
-
-    private void boxStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_boxStatusActionPerformed
-        // TODO add your handling code here:
-        // setar estado do pedido
-
-        Pedido p = this.pedidoEscolhido;
-
-        String statusBox = boxStatus.getSelectedItem().toString().trim();
-        try {
-        if (statusBox.equals("ABERTO")) {
-            pedidoController.atualizarStatusPedido(p.getId(), StatusPedido.ABERTO);
-            p.setStatus(StatusPedido.ABERTO);
-        } else if (statusBox.equals("CAMINHO")) {
-            pedidoController.atualizarStatusPedido(p.getId(), StatusPedido.CAMINHO);
-            p.setStatus(StatusPedido.CAMINHO);
-        } else if (statusBox.equals("ENTREGUE")) {
-             pedidoController.atualizarStatusPedido(p.getId(), StatusPedido.ENTREGUE);
-            p.setStatus(StatusPedido.ENTREGUE);
-        } else {
-            System.out.println("ERRO: Status não reconhecido");
-        }
-        } catch (SQLException ex){
-            System.out.println("ERRO AO TROCAR STATUS\n" + ex);
-        }
-
-    }//GEN-LAST:event_boxStatusActionPerformed
-
-    private void boxStatusMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_boxStatusMouseClicked
-
-    }//GEN-LAST:event_boxStatusMouseClicked
-
-    private void boxStatusItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_boxStatusItemStateChanged
-        // TODO add your handling code here:
-    }//GEN-LAST:event_boxStatusItemStateChanged
-
-    private void boxStatusMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_boxStatusMousePressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_boxStatusMousePressed
-
-    private void boxStatusPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_boxStatusPropertyChange
-        // TODO add your handling code here:
-    }//GEN-LAST:event_boxStatusPropertyChange
 
     private void boxFormaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_boxFormaActionPerformed
         // trocar valores de Max e Min
@@ -710,6 +774,27 @@ public class telaFazerPedido extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnDimensaoActionPerformed
 
+    private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
+        // TODO add your handling code here:
+        
+        //sair salvando o pedido
+        Cliente c = this.clienteSelecionado;
+        if (pizzasCriadas.isEmpty()){
+            JOptionPane.showMessageDialog(null, "NÃO PODE FAZER PEDIDO SEM PIZZAS.\n", "SEM PIZZAS PEDIDO", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+        try {
+        pedidoController.criarPedido(c.getId(), pizzasCriadas);
+        } catch (SQLException ex){
+            System.out.println("ERRO AO CRIAR O PEDIDO\n" + ex);
+        }
+        telaVerClientePedidos telClientePedidosAposSalvar = new telaVerClientePedidos();
+        telClientePedidosAposSalvar.setCliente(c);
+        telClientePedidosAposSalvar.setVisible(true);
+        this.dispose();
+        }
+        
+    }//GEN-LAST:event_jToggleButton1ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -751,7 +836,6 @@ public class telaFazerPedido extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> boxForma;
     private javax.swing.JComboBox<String> boxSabor1;
     private javax.swing.JComboBox<String> boxSabor2;
-    private javax.swing.JComboBox<String> boxStatus;
     private javax.swing.JComboBox<String> boxTipos1;
     private javax.swing.JComboBox<String> boxTipos2;
     private javax.swing.JButton btnAdicionar;
@@ -761,11 +845,11 @@ public class telaFazerPedido extends javax.swing.JFrame {
     private javax.swing.JButton btnRemover;
     private javax.swing.JButton btnSair;
     private javax.swing.ButtonGroup grupoBotao;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JLabel labelMax;
     private javax.swing.JLabel labelMin;
     private javax.swing.JLabel labelValorTotal;
@@ -773,7 +857,9 @@ public class telaFazerPedido extends javax.swing.JFrame {
     private javax.swing.JTextField txtAreaDimensao;
     // End of variables declaration//GEN-END:variables
 
-    void setPedido(Pedido p) {
-        this.pedidoEscolhido = p;
+   
+    void setCliente (Cliente c){
+        this.clienteSelecionado = c;
     }
+    
 }

@@ -229,8 +229,6 @@ public class telaCadastraCliente extends javax.swing.JFrame {
         String Stel = txtTel.getText();
         String regex = "\\d{11}";
         
-     
-        
         //tratamentos de campos vazios e telefone correto
         if (nome.isEmpty() || sobrenome.isEmpty() || Stel.isEmpty()) {
             JOptionPane.showMessageDialog(null, "Preencha todos os campos.\n", "CAMPOS OBRIGATÓRIOS", JOptionPane.INFORMATION_MESSAGE);
@@ -244,6 +242,7 @@ public class telaCadastraCliente extends javax.swing.JFrame {
                     Long id = Long.valueOf(clienteController.IncrementaIdCliente());
                     Cliente c = new Cliente(id,nome, sobrenome,Stel);
                     try {
+                     clienteController.adicionarCliente(c);
                     this.TabelaModelClientes.setListaContatos(clienteController.listarClientes());
                     this.tabClientes.setRowSelectionInterval(clienteController.listarClientes().size() - 1, clienteController.listarClientes().size() - 1);
                     } catch (SQLException ex){
@@ -275,7 +274,7 @@ public class telaCadastraCliente extends javax.swing.JFrame {
         
         ClienteController clienteController = new ClienteController();
         try {
-            clienteController.adicionarCliente(c);
+            clienteController.atualizarCliente(c);
         } catch (SQLException ex){
             System.out.println("ERRO AO ATUALIZAR CLIENTE:\n" + ex);
         }

@@ -4,10 +4,20 @@
  */
 package telas;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import pizarria.Pedido.Estado;
+import pizzaria.controller.ClienteController;
+import pizzaria.controller.PedidoController;
+import pizzaria.enums.StatusPedido;
+import pizzaria.model.Cliente;
+import pizzaria.model.Pedido;
+import pizzaria.view.tableModelCLientePedidos;
 
 /**
  *
@@ -24,7 +34,15 @@ public class telaVerPedidos extends javax.swing.JFrame {
     
     private tableModelCLientePedidos TabelaModelPedidos = new tableModelCLientePedidos();
     private Cliente clienteSelecionado;
+    private Pedido pedidoSelecionado;
     private int linhaSelecionada;
+    
+    //lista que vai pegar os pedidos atuais
+    List<Pedido> listaPopular = new ArrayList<Pedido>();
+    
+    private PedidoController pedidoController = new PedidoController();
+    private ClienteController clienteController = new ClienteController();
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -43,6 +61,7 @@ public class telaVerPedidos extends javax.swing.JFrame {
         btnFinalizarPedido = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
         boxStatus = new javax.swing.JComboBox<>();
+        jButton2 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -86,6 +105,13 @@ public class telaVerPedidos extends javax.swing.JFrame {
             }
         });
 
+        jButton2.setText("Atualizar");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -101,15 +127,15 @@ public class telaVerPedidos extends javax.swing.JFrame {
                                 .addGap(6, 6, 6)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                     .addComponent(btnFinalizarPedido)
-                                    .addComponent(boxStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(18, 18, 18))
+                                    .addComponent(boxStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addGroup(layout.createSequentialGroup()
                                 .addContainerGap()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel1)
                                     .addComponent(jLabel2)
-                                    .addComponent(labelNome, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(18, 18, 18)))
+                                    .addComponent(labelNome, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jButton2))))
+                        .addGap(18, 18, 18)
                         .addComponent(Panel, javax.swing.GroupLayout.PREFERRED_SIZE, 309, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 5, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -132,6 +158,8 @@ public class telaVerPedidos extends javax.swing.JFrame {
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(boxStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jButton2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnFinalizarPedido)))
                 .addContainerGap(9, Short.MAX_VALUE))
@@ -144,7 +172,8 @@ public class telaVerPedidos extends javax.swing.JFrame {
         // TODO add your handling code here:
         
         //popular tabela
-        this.TabelaModelPedidos.setListaContatos(BancoDadosClientes.listaClientes);
+        this.atualizarLista();
+        this.TabelaModelPedidos.setListaPedidos(listaPopular);
         
         //popular box de status
         String[] status = {"ABERTO", "CAMINHO", "ENTREGUE"};
@@ -166,15 +195,12 @@ public class telaVerPedidos extends javax.swing.JFrame {
         // TODO add your handling code here:
         // finalizar o pedido limpando a tabela de pizzas e resetando o status, apenas se o status estiver entregue
         
-        Cliente c = this.clienteSelecionado;
-        String status = c.Pedido.getEstado().toString();
-        
+        Pedido p = this.pedidoSelecionado;
+        String status = p.getStatus().toString();
         if (status == "ENTREGUE"){
-            c.Pedido.setEstado(Estado.ABERTO);
-            c.Pedido.limparLIstaPizza();
-            this.TabelaModelPedidos.setListaContatos(BancoDadosClientes.listaClientes);
+            this.TabelaModelPedidos.setListaPedidos(listaPopular);
             
-            Pedido.Estado estadoAtual = c.getPedido().getEstado();
+            StatusPedido estadoAtual = p.getStatus();
             for (int i = 0; i < boxStatus.getItemCount(); i++) {
                 if (boxStatus.getItemAt(i).equals(estadoAtual.name())) {
                     boxStatus.setSelectedIndex(i);
@@ -192,12 +218,19 @@ public class telaVerPedidos extends javax.swing.JFrame {
     private void tablClientePedidoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablClientePedidoMouseClicked
         // pegar cliente clicado
         linhaSelecionada = this.tablClientePedido.rowAtPoint(evt.getPoint());
-        Cliente c = this.TabelaModelPedidos.getCliente(linhaSelecionada);
-        this.clienteSelecionado = c;
+        Pedido p = this.TabelaModelPedidos.getPedido(linhaSelecionada);
+        this.pedidoSelecionado = p;
+        ClienteController clienteController = new ClienteController();
+        Cliente c = null;
+        try {
+            c = this.clienteController.buscarClientePorId(p.getClienteId());
+        } catch (SQLException ex) {
+            System.out.println("ERRO AO PEGAR NOME DO CLIENTE\n" + ex);
+        }
         //mostrar dados nas labels
         labelNome.setText(c.getNome());
         
-        Pedido.Estado estadoAtual = c.getPedido().getEstado();
+        StatusPedido estadoAtual = p.getStatus();
         for (int i = 0; i < boxStatus.getItemCount(); i++) {
             if (boxStatus.getItemAt(i).equals(estadoAtual.name())) {
                 boxStatus.setSelectedIndex(i);
@@ -210,31 +243,48 @@ public class telaVerPedidos extends javax.swing.JFrame {
     private void boxStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_boxStatusActionPerformed
         // setar estado do pedido
         
-        Cliente c = this.clienteSelecionado;
+        Pedido p  = this.pedidoSelecionado;
         
-        if (c != null){
+        if (p != null){
         
         String statusBox = boxStatus.getSelectedItem().toString().trim();
-
+        String statusBoxAntiga = statusBox;
         if (statusBox.equals("ABERTO")) {
-            c.Pedido.setEstado(Estado.ABERTO);
+             p.setStatus(StatusPedido.ABERTO);
         } else if (statusBox.equals("CAMINHO")) {
-            c.Pedido.setEstado(Estado.CAMINHO);
+            p.setStatus(StatusPedido.CAMINHO);
         } else if (statusBox.equals("ENTREGUE")) {
-            c.Pedido.setEstado(Estado.ENTREGUE);
+            p.setStatus(StatusPedido.ENTREGUE);
         } else {
             System.out.println("ERRO: Status não reconhecido");
         }
-        } else {
         }
         
-        this.TabelaModelPedidos.setListaContatos(BancoDadosClientes.listaClientes);
-        
+
     }//GEN-LAST:event_boxStatusActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+        // atualizar a tabela e o pedido
+        Pedido p = pedidoSelecionado;
+        if ( p != null){
+            try {
+                pedidoController.atualizarStatusPedido(p.getId(), p.getStatus());
+                atualizarLista();
+                this.TabelaModelPedidos.setListaPedidos(listaPopular);
+            } catch (SQLException ex){
+                System.out.println("ERRO AO ATUALIZAR STATUS\n" + ex);
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "SELECIONE UM PEDIDO PRIMEIRO.\n", "SELECIONE UM PEDIDO", JOptionPane.INFORMATION_MESSAGE);
+            
+
+    }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
      * @param args the command line arguments
      */
+}
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -273,9 +323,24 @@ public class telaVerPedidos extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> boxStatus;
     private javax.swing.JButton btnFinalizarPedido;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel labelNome;
     private javax.swing.JTable tablClientePedido;
     // End of variables declaration//GEN-END:variables
+
+    private void atualizarLista(){
+        try {
+            listaPopular.clear();
+            for (Cliente c : clienteController.listarClientes()){
+                for (Pedido p : pedidoController.listarPedidosPorCliente(c.getId())){
+                    listaPopular.add(p);
+            }
+         } 
+        } catch (SQLException ex){
+            System.out.println("ERRO AO INICIALIZAR A LISTA");
+        }
+    }
+
 }

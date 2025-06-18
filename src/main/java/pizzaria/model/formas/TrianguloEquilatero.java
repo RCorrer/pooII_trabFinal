@@ -8,7 +8,6 @@ public class TrianguloEquilatero extends Forma {
 
     public TrianguloEquilatero(double lado) {
         super(lado);
-        validarTamanho();
     }
 
     @Override

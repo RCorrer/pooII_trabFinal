@@ -8,7 +8,6 @@ public class Quadrado extends Forma {
 
     public Quadrado(double lado) {
         super(lado);
-        validarTamanho();
     }
 
     @Override

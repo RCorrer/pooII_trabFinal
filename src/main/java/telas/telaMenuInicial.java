@@ -1,4 +1,5 @@
-/*
+/*fqwfwafswefsdfas lisefdcvasefgsdgbsd g e g s gsee sgesf 
+Lucas Venturin Trindade
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
@@ -49,7 +50,7 @@ public class telaMenuInicial extends javax.swing.JFrame {
             }
         });
 
-        btnRealizarPedidos.setText("Realizar/Alterar Pedidos");
+        btnRealizarPedidos.setText("Realizar Pedidos");
         btnRealizarPedidos.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnRealizarPedidosActionPerformed(evt);
@@ -94,7 +95,7 @@ public class telaMenuInicial extends javax.swing.JFrame {
                             .addComponent(btnCadastrarClientes, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnAlterarPizzas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnRealizarPedidos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap(109, Short.MAX_VALUE))
+                .addContainerGap(144, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -187,7 +188,7 @@ public class telaMenuInicial extends javax.swing.JFrame {
             }
         });
     }
-
+        
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAlterarPizzas;
     private javax.swing.JButton btnCadastrarClientes;

@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import pizzaria.model.Cliente;
+import pizzaria.model.Pedido;
 
 
 /**
@@ -22,12 +23,12 @@ public class tableModelCLientePedidos extends AbstractTableModel{
                 //VOU TER QUE MUDAR ESTA TELA/TABELA POIS AGORA UM CLIENTE TEM VARIOS PEDIDOS
                 //VOU TER QUE MUDAR ESTA TELA/TABELA POIS AGORA UM CLIENTE TEM VARIOS PEDIDOS
 //    private String[] colunas=new String[]{"ID","Nome", "Telefone", "Estado Pedido"};
-    private String[] colunas = new String[]{"ID", "Nome", "Telefone"};
-
-    private List<Cliente> lista=new ArrayList();
+    private String[] colunas = new String[]{"ID", "Valor", "Status"};
+    
+    private List<Pedido> lista=new ArrayList();
 
     
-    public tableModelCLientePedidos(List<Cliente> lista){
+    public tableModelCLientePedidos(List<Pedido> lista){
         this.lista=lista;
     }
 
@@ -60,41 +61,39 @@ public class tableModelCLientePedidos extends AbstractTableModel{
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        Cliente customer = lista.get(rowIndex);
+        Pedido pedido = lista.get(rowIndex);
         switch (columnIndex) {
-            case 0: return customer.getId();//if column 0 (code)
-            case 1: return customer.getNome();//if column 1 (name)
-            case 2: return customer.getTelefone();
-            //VOU TER QUE MUDAR ESTA TELA/TABELA POIS AGORA UM CLIENTE TEM VARIOS PEDIDOS
-//            case 3: return customer;
+            case 0: return pedido.getId();//if column 0 (code)
+            case 1: return pedido.getValorTotal().toString();//if column 1 (name)
+            case 2: return pedido.getStatus().toString();//if column 2 (birthday)
             default : return null;
         }
     }
 
-    public boolean removeCliente(Cliente customer) {
-        int linha = this.lista.indexOf(customer);
-        boolean result = this.lista.remove(customer);
-        this.fireTableRowsDeleted(linha,linha);//update JTable
+    public boolean removePedido(Pedido pedido) {
+        int linha = this.lista.indexOf(pedido);
+        boolean result = this.lista.remove(pedido);
+        this.fireTableRowsDeleted(linha, linha);//update JTable
         return result;
     }
 
-    public void adicionaCliente(Cliente customer) {
-        this.lista.add(customer);
+    public void adicionaPedido(Pedido pedido) {
+        this.lista.add(pedido);
         //this.fireTableDataChanged();
-        this.fireTableRowsInserted(lista.size()-1,lista.size()-1);//update JTable
+        this.fireTableRowsInserted(lista.size( ) -1, lista.size() -1);//update JTable
     }
 
-    public void setListaContatos(List<Cliente> contatos) {
-        this.lista = contatos;
+    public void setListaPedidos(List<Pedido> pedidos) {
+        this.lista = pedidos;
         this.fireTableDataChanged();
         //this.fireTableRowsInserted(0,contatos.size()-1);//update JTable
     }
     
-    public void setListaContatos(HashMap<String,Cliente> contatos) {
+    public void setListaContatos(HashMap<String,Pedido> pedidos) {
         
-        this.lista = new ArrayList<Cliente>();
-        for(Cliente c:contatos.values()){
-            this.lista.add(c);
+        this.lista = new ArrayList<Pedido>();
+        for(Pedido p:pedidos.values()){
+            this.lista.add(p);
         }
         this.fireTableDataChanged();
         //this.fireTableRowsInserted(0,contatos.size()-1);//update JTable
@@ -108,13 +107,13 @@ public class tableModelCLientePedidos extends AbstractTableModel{
         this.fireTableRowsDeleted(0,indice);//update JTable
     }
 
-    public Cliente getCliente(int linha){
+    public Pedido getPedido(int linha){
         return lista.get(linha);
     }
 
-    public void removeClientes(List<Cliente> listaParaExcluir) {
-        for(Cliente c:listaParaExcluir)
-            removeCliente(c);
+    public void removePedidos(List<Pedido> listaParaExcluir) {
+        for(Pedido p:listaParaExcluir)
+            removePedido(p);
     }
     
     public void atualizarCliente(int linha){

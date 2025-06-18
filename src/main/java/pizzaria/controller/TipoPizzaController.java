@@ -38,9 +38,6 @@ public class TipoPizzaController {
     }
 
     private void validarTipoPizza(TipoPizza tipo) {
-        if (tipo.getNome() == null || tipo.getNome().trim().isEmpty()) {
-            throw new IllegalArgumentException("Nome do tipo não pode ser vazio");
-        }
         if (tipo.getPrecoPorCm2() == null || tipo.getPrecoPorCm2().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Preço por cm² deve ser maior que zero");
         }

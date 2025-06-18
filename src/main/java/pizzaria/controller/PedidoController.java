@@ -62,6 +62,10 @@ public class PedidoController {
     public List<Pedido> listarPedidosPorStatus(StatusPedido status) throws SQLException {
         return pedidoDao.buscarPorStatus(status.name());
     }
+    
+    public void removerPedido(Long id) throws SQLException{
+        pedidoDao.remover(id);
+    }
 
     private BigDecimal calcularValorTotal(List<Pizza> pizzas) {
         BigDecimal total = BigDecimal.ZERO;

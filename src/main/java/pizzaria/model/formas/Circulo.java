@@ -8,7 +8,6 @@ public class Circulo extends Forma {
 
     public Circulo(double raio) {
         super(raio);
-        validarTamanho();
     }
 
     @Override

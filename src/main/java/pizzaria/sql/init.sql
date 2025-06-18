@@ -83,3 +83,12 @@ CREATE INDEX IF NOT EXISTS idx_sabores_tipo ON sabores(tipo_pizza_id);
 -- Permissões adicionais
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO pizzashop;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO pizzashop;
+
+ALTER TABLE pedidos DROP CONSTRAINT pedidos_cliente_id_fkey;
+
+
+ALTER TABLE pedidos 
+ADD CONSTRAINT pedidos_cliente_id_fkey 
+FOREIGN KEY (cliente_id) 
+REFERENCES clientes(id) 
+ON DELETE CASCADE;

@@ -20,7 +20,7 @@ import pizzaria.model.Sabor;
  * @author joaow
  */
 public class TableModelPizzas extends AbstractTableModel{
-    private String[] colunas=new String[]{"Forma","Sabor 1","Sabor 2", "Dimensao","Area","Preço Total"};
+    private String[] colunas=new String[]{"Forma","Sabor 1","Sabor 2", "Lado/Raio","Area","Preço Total"};
 
     private List<Pizza> lista=new ArrayList();
 
@@ -71,15 +71,12 @@ public class TableModelPizzas extends AbstractTableModel{
         
         
         String sabor1Nome = sabor1.getNome();
-        if (lista.size() == 2){
             sabor2Nome = saborcontroller.buscarSaborPorId(listaIdsSabores.get(1)).getNome();
-        } else {
-            sabor2Nome = "Nenhum";
-        }
+        
         
         
         switch (columnIndex) {
-            case 0: return pizza.getForma();//if column 0 (code)
+            case 0: return pizza.getForma().getTipo().name();//if column 0 (code)
             case 1: return sabor1Nome;//if column 1 (name)
             case 2: return sabor2Nome;//if column 2 (birthday)
             case 3: return pizza.getForma().getTamanho();

@@ -6,6 +6,7 @@ package telas;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -147,9 +148,11 @@ public class telaAlterarPizzas extends javax.swing.JFrame {
     private void formComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentShown
         //popular os fields com valores
         
-        List<TipoPizza> tiposPizza = null;
+        List<TipoPizza> tiposPizza = new ArrayList<>();
         try {
-            tiposPizza = tipoPizzaController.listarTiposPizza();
+        tiposPizza.add(tipoPizzaController.buscarTipoPizzaPorId(Long.valueOf(1)));
+        tiposPizza.add(tipoPizzaController.buscarTipoPizzaPorId(Long.valueOf(2)));
+        tiposPizza.add(tipoPizzaController.buscarTipoPizzaPorId(Long.valueOf(3)));        
         } catch (SQLException ex) {
             Logger.getLogger(telaAlterarPizzas.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -176,17 +179,25 @@ public class telaAlterarPizzas extends javax.swing.JFrame {
             double precoPremium = Double.parseDouble(sPrecoPremium);
 
                 
-        List<TipoPizza> tiposPizza = null;
+        List<TipoPizza> tiposPizza = new ArrayList<TipoPizza>();
         try {
-            tiposPizza = tipoPizzaController.listarTiposPizza();
-        } catch (SQLException ex) {
-            Logger.getLogger(telaAlterarPizzas.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        tiposPizza.add(tipoPizzaController.buscarTipoPizzaPorId(Long.valueOf(1)));
+        tiposPizza.add(tipoPizzaController.buscarTipoPizzaPorId(Long.valueOf(2)));
+        tiposPizza.add(tipoPizzaController.buscarTipoPizzaPorId(Long.valueOf(3)));
         
         tiposPizza.get(0).setPrecoPorCm2(BigDecimal.valueOf(precoSimples));
         tiposPizza.get(1).setPrecoPorCm2(BigDecimal.valueOf(precoEspecial));
         tiposPizza.get(2).setPrecoPorCm2(BigDecimal.valueOf(precoPremium));
+        
+        tipoPizzaController.atualizarTipoPizza(tiposPizza.get(0));
+        tipoPizzaController.atualizarTipoPizza(tiposPizza.get(1));
+        tipoPizzaController.atualizarTipoPizza(tiposPizza.get(2));
 
+        } catch (SQLException ex) {
+            Logger.getLogger(telaAlterarPizzas.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+       
         
             
             
